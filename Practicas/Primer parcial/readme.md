@@ -1,4 +1,5 @@
-About this practice
+About this practices
 
 
-I created a Chat Client-Server where the client can send a message to the server, and te server can reply with other message. I used sockets to create the conection of the client with the server.
+In this folder, you can find my practices of my first part ofthe course in the subject.
+All the practices were done in Java.
