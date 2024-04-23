@@ -38,7 +38,7 @@ public class MulticastChatServer {
                 String userName = new String(packet.getData(), 0, packet.getLength());
 
                 while (true) {
-                    String message = "<msj><" + userName + "> ";
+                    String message = "<msj><Server> ";
                     BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
                     message += userInput.readLine();
                     if (message.equalsIgnoreCase("<msj><" + userName + "> exit")) {
