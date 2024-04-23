@@ -4,8 +4,8 @@ import java.io.*;
 import java.net.*;
 
 public class MulticastChatClient {
-    private static final String MULTICAST_ADDRESS = "230.0.0.1";
-    private static final int PORT = 5000;
+    private static final String MULTICAST_ADDRESS = "230.1.1.1";
+    private static final int PORT = 4000;
 
     public static void main(String[] args) {
         try {
@@ -13,29 +13,37 @@ public class MulticastChatClient {
             MulticastSocket socket = new MulticastSocket(PORT);
             socket.joinGroup(group);
 
-            BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
-
-            // Enviar el nombre del usuario al servidor
-            System.out.print("<inicio>");
-            String userName = userInput.readLine();
-            byte[] buffer = userName.getBytes();
-            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT);
-            socket.send(packet);
-
             Thread receiverThread = new Thread(() -> {
                 try {
-                    byte[] buffer1 = new byte[1024];
+                    byte[] buffer = new byte[1024];
                     while (true) {
-                        DatagramPacket packet1 = new DatagramPacket(buffer1, buffer1.length);
-                        socket.receive(packet1);
-                        String message = new String(packet1.getData(), 0, packet1.getLength());
-                        System.out.println(message);
+                        DatagramPacket packet = new DatagramPacket(buffer, buffer.length);
+                        socket.receive(packet);
+                        String message = new String(packet.getData(), 0, packet.getLength());
+
+                        if (message.startsWith("<users>")) {
+                            String userListStr = message.substring(7);
+                            String[] userList = userListStr.split(",");
+                            System.out.println("Connected users:");
+                            for (String user : userList) {
+                                System.out.println("- " + user);
+                            }
+                        } else {
+                            System.out.println(message);
+                        }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             });
             receiverThread.start();
+
+            System.out.print("<inicio>");
+            BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in));
+            String userName = userInput.readLine();
+            byte[] buffer = ("<inicio> " + userName).getBytes();
+            DatagramPacket packet = new DatagramPacket(buffer, buffer.length, group, PORT);
+            socket.send(packet);
 
             System.out.println("Multicast chat client started. Type 'exit' to leave.");
 
@@ -50,6 +58,10 @@ public class MulticastChatClient {
                 packet = new DatagramPacket(buffer, buffer.length, group, PORT);
                 socket.send(packet);
             }
+
+            byte[] exitMessage = ("<fin> " + userName).getBytes();
+            DatagramPacket exitPacket = new DatagramPacket(exitMessage, exitMessage.length, group, PORT);
+            socket.send(exitPacket);
 
             socket.leaveGroup(group);
             socket.close();
